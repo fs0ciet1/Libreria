@@ -32,23 +32,21 @@ public class BookDao
     }
 
     //=================================== FUN INSERIMENTO LIBRI ===================================//
-    public static boolean InsertBook(String name, String titolo, String autore, String codiceISBN, String dataAggiunta, String dataEliminazione, String trama, int numeroLetture) throws SQLException
+    public static boolean InsertBook(String name, String title, String author, String ISBNCode, String addition_date,String plot, int readCounter) throws SQLException
     {
         PreparedStatement cmd = null;
-
         //inserimento effettivo di una nuovo record nel db
         try {
-            String updateTableSQL = "INSERT INTO libreria(name, titolo, autore, codiceISBN, dataAggiunta, dataEliminazione, trama, numeroLetture) VALUES(?,?, ?,?,?,?,?, ?)";
+            String updateTableSQL = "INSERT INTO books(NAME, title, author, isbn_code, add_date, del_date, plot, read_counter) VALUES(?,?,?,?,?,NULL,?,?)";
             cmd = ConnectionDb().prepareStatement(updateTableSQL);
 
             cmd.setString(1, name);
-            cmd.setString(2, titolo);
-            cmd.setString(3, autore);
-            cmd.setString(4, codiceISBN);
-            cmd.setString(5, dataAggiunta);
-            cmd.setString(6, dataEliminazione);
-            cmd.setString(7, trama);
-            cmd.setInt(8, numeroLetture);
+            cmd.setString(2, title);
+            cmd.setString(3, author);
+            cmd.setString(4, ISBNCode);
+            cmd.setString(5, addition_date); //inserire dati in formato AAAA-MM-DD
+            cmd.setString(6, plot);
+            cmd.setInt(7, readCounter);
 
             //esercuzione query
             cmd.executeUpdate();
@@ -60,9 +58,67 @@ public class BookDao
         return true;
     }
 
-    //=================================== FUN VISUALIZZAZIONE ELENCO LIBRI ===================================//
+    //=================================== FUN UPDATE LIBRI ===================================//
+    public static void UpdateBook (String name, String title, String author, String ISBNCode, String addition_date,String plot, int readCounter, String specificBook) throws SQLException
+    {
+        PreparedStatement cmd = null;
 
-    //gli passo sola la mail perche per il momento decido se sia la primaryKey
+        try
+        {
+            String updateTableSQL = "UPDATE books SET NAME = ?, title=?, author=?, isbn_code=?, add_date=?, del_date= NULL, plot=?, read_counter=? WHERE NAME=? AND title = ?";
+            cmd = ConnectionDb().prepareStatement(updateTableSQL);
+
+            //set
+            cmd.setString(1, name);
+            cmd.setString(2, title);
+            cmd.setString(3, author);
+            cmd.setString(4, ISBNCode);
+            cmd.setString(5, addition_date); //passaggio di una variabile temporanea dove ho il titolo del libro da modificare
+            cmd.setString(6, plot);
+            cmd.setInt(7, readCounter);
+
+            //where
+            cmd.setString(8, name);
+            cmd.setString(9, specificBook); //passaggio di una variabile temporanea dove ho il titolo del libro da modificare
+
+            //esercuzione query
+            cmd.executeUpdate();
+
+        }catch(Exception e)
+        {
+            System.out.println("ERRORE UPDATE");
+        }
+    }
+
+    //=================================== FUN DELETE LIBRI ===================================//
+    public static void DeleteBook (String name, String title, String deletion_date) throws SQLException
+    {
+        PreparedStatement cmd = null;
+
+        try {
+
+            String updateTableSQL = "UPDATE books SET del_date= ? WHERE NAME=? AND title = ?";
+            cmd = ConnectionDb().prepareStatement(updateTableSQL);
+
+            //set
+            cmd.setString(1, deletion_date);
+
+            //where
+            cmd.setString(2, name);
+            cmd.setString(3, title);
+
+            // Esecuzione query
+            cmd.executeUpdate();
+
+        } catch (Exception e)
+        {
+            System.out.println("ERRORE DELETE");
+        }
+    }
+
+
+    //=================================== FUN VISUALIZZAZIONE ELENCO LIBRI ===================================//
+    //gli passo solo in ome perche per il momento decido se sia la primaryKey
     public static ArrayList<Book> ViewBooks(String name) throws SQLException
     {
         PreparedStatement cmd = null;
@@ -70,11 +126,9 @@ public class BookDao
 
         try
         {
-
-            String qry = "SELECT * FROM books";
+            String qry = "SELECT * FROM books WHERE NAME = ? AND del_date IS NULL";
             cmd = ConnectionDb().prepareStatement(qry);
-
-            //cmd.setString(1, name);
+            cmd.setString(1, name);
 
             //Eseguiamo una query e immagazziniamone i risultati in un oggetto ResultSet
             ResultSet res = cmd.executeQuery();
@@ -87,25 +141,15 @@ public class BookDao
             {
                 // Creazione di una nuova istanza ad ogni iterazione
                 Book bookTmp = new Book(
-                    res.getString("NAME"),
-                    res.getString("title"),
-                    res.getString("author"),
-                    res.getString("ISBN_code"),
-                    res.getString("addition_date"),
-                    res.getString("deletion_date"),
-                    res.getString("plot"),
-                    res.getInt("number_of_lessions")
+                        res.getString("name"),
+                        res.getString("title"),
+                        res.getString("author"),
+                        res.getString("isbn_code"),
+                        res.getString("add_date"),
+                        res.getString("del_date"),
+                        res.getString("plot"),
+                        res.getInt("read_counter")
                 );
-
-                //System.out.println(res.getString("NAME"));
-                //System.out.println(res.getString("title"));
-
-                /*System.out.println(res.getString("autore"));
-                System.out.println(res.getString("codice_isbn"));
-                System.out.println(res.getString("data_aggiunta"));
-                System.out.println(res.getString("data_eliminazione"));
-                System.out.println(res.getString("trama"));
-                System.out.println(res.getString("numero_letture"));*/
 
                 listBooks.add(bookTmp);
                 esiste = res.next();
@@ -117,4 +161,9 @@ public class BookDao
         }
         return listBooks;
     }
+
+
+
+
+
 }

@@ -48,6 +48,7 @@ public class UserDao
 
             cmd = ConnectionDb().prepareStatement(qry);
 
+            // Imposta i parametri nella query (commentati perché non sono utilizzati nel codice)
             /*cmd.setString(1, name);
             cmd.setString(2, surname);
             cmd.setString(3, email);*/
@@ -70,10 +71,8 @@ public class UserDao
         PreparedStatement cmd = null;
         ArrayList<User> listUsers = new ArrayList<User>();
 
-
         try
         {
-
             String qry = "SELECT * FROM users";
             cmd = ConnectionDb().prepareStatement(qry);
 
